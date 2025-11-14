@@ -51,11 +51,6 @@ if ngx.var.upstream_addr then
     end
 end
 
--- Track connections (using ngx.stat for accurate counts)
-local stats = ngx.stat()
-if stats then
-    _G.metric_connections:set(stats.active, {"active"})
-    _G.metric_connections:set(stats.reading, {"reading"})
-    _G.metric_connections:set(stats.writing, {"writing"})
-    _G.metric_connections:set(stats.waiting, {"waiting"})
-end
+-- Track connections using our own metrics (no dependency on ngx.stat or stub_status)
+-- These are tracked automatically by prometheus based on our counters
+-- No need to query ngx.stat() or stub_status on every request

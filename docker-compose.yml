@@ -7,13 +7,13 @@ services:
     ports:
       - "8081:80"
       - "9145:9145"
-    volumes:
-      # Mount Lua scripts for live editing
-      - ./lua:/usr/local/openresty/nginx/lua
-      # Mount nginx config for live editing
-      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
-      # Optional: mount logs directory
-      - ./logs:/usr/local/openresty/nginx/logs
+#    volumes:
+#      # Mount Lua scripts for live editing
+#      - ./lua:/usr/local/openresty/nginx/lua
+#      # Mount nginx config for live editing
+#      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+#      # Optional: mount logs directory
+#      - ./logs:/usr/local/openresty/nginx/logs
     restart: unless-stopped
     # Enable hot reload - uncomment if you want auto-reload on changes
     # command: /bin/sh -c "while true; do /usr/local/openresty/bin/openresty -g 'daemon off;'; sleep 1; done"

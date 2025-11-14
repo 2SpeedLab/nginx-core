@@ -28,7 +28,6 @@ RUN mkdir -p /etc/nginx/lua \
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
 COPY nginx/conf.d/monitoring.conf /etc/nginx/conf.d/monitoring.conf
 COPY nginx/conf.d/upstreams.conf /etc/nginx/conf.d/upstreams.conf
-COPY nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf
 
 # Copy Lua scripts
 COPY lua/*.lua /etc/nginx/lua/
