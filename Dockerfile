@@ -1,6 +1,4 @@
-# Dockerfile - Ubuntu Jammy
-# https://github.com/openresty/docker-openresty
-
+# Dockerfile - Ubuntu Jammy with multi-stage caching
 ARG RESTY_IMAGE_BASE="ubuntu"
 ARG RESTY_IMAGE_TAG="jammy"
 
@@ -14,28 +12,20 @@ ARG RESTY_IMAGE_BASE="ubuntu"
 ARG RESTY_IMAGE_TAG="jammy"
 ARG RESTY_VERSION="1.27.1.2"
 ARG RESTY_LUAROCKS_VERSION="3.12.2"
-
-# https://github.com/openresty/openresty-packaging/blob/master/deb/openresty-openssl3/debian/rules
 ARG RESTY_OPENSSL_VERSION="3.4.3"
 ARG RESTY_OPENSSL_PATCH_VERSION="3.4.1"
 ARG RESTY_OPENSSL_URL_BASE="https://github.com/openssl/openssl/releases/download/openssl-${RESTY_OPENSSL_VERSION}"
-# LEGACY:  "https://www.openssl.org/source/old/1.1.1"
 ARG RESTY_OPENSSL_BUILD_OPTIONS="enable-camellia enable-seed enable-rfc3779 enable-cms enable-md2 enable-rc5 \
-        enable-weak-ssl-ciphers enable-ssl3 enable-ssl3-method enable-md2 enable-ktls enable-fips \
-        "
+        enable-weak-ssl-ciphers enable-ssl3 enable-ssl3-method enable-md2 enable-ktls enable-fips"
 
-# https://github.com/openresty/openresty-packaging/blob/master/deb/openresty-pcre2/debian/rules
 ARG RESTY_PCRE_VERSION="10.44"
 ARG RESTY_PCRE_SHA256="86b9cb0aa3bcb7994faa88018292bc704cdbb708e785f7c74352ff6ea7d3175b"
 ARG RESTY_PCRE_BUILD_OPTIONS="--enable-jit --enable-pcre2grep-jit --disable-bsr-anycrlf --disable-coverage --disable-ebcdic --disable-fuzz-support \
     --disable-jit-sealloc --disable-never-backslash-C --enable-newline-is-lf --enable-pcre2-8 --enable-pcre2-16 --enable-pcre2-32 \
     --enable-pcre2grep-callout --enable-pcre2grep-callout-fork --disable-pcre2grep-libbz2 --disable-pcre2grep-libz --disable-pcre2test-libedit \
-    --enable-percent-zt --disable-rebuild-chartables --enable-shared --disable-static --disable-silent-rules --enable-unicode --disable-valgrind \
-    "
+    --enable-percent-zt --disable-rebuild-chartables --enable-shared --disable-static --disable-silent-rules --enable-unicode --disable-valgrind"
 
 ARG RESTY_J="1"
-
-# https://github.com/openresty/openresty-packaging/blob/master/deb/openresty/debian/rules
 ARG RESTY_CONFIG_OPTIONS="\
     --with-compat \
     --without-http_rds_json_module \
@@ -70,11 +60,11 @@ ARG RESTY_CONFIG_OPTIONS="\
     --with-stream_ssl_module \
     --with-stream_ssl_preread_module \
     --with-threads \
-    "
+    --add-module=/tmp/nginx-module-vts"
+
 ARG RESTY_CONFIG_OPTIONS_MORE=""
 ARG RESTY_LUAJIT_OPTIONS="--with-luajit-xcflags='-DLUAJIT_NUMMODE=2 -DLUAJIT_ENABLE_LUA52COMPAT'"
 ARG RESTY_PCRE_OPTIONS="--with-pcre-jit"
-
 ARG RESTY_ADD_PACKAGE_BUILDDEPS=""
 ARG RESTY_ADD_PACKAGE_RUNDEPS=""
 ARG RESTY_EVAL_PRE_CONFIGURE=""
@@ -82,39 +72,24 @@ ARG RESTY_EVAL_POST_DOWNLOAD_PRE_CONFIGURE=""
 ARG RESTY_EVAL_PRE_MAKE=""
 ARG RESTY_EVAL_POST_MAKE=""
 
-# These are not intended to be user-specified
 ARG _RESTY_CONFIG_DEPS="--with-pcre \
     --with-cc-opt='-DNGX_LUA_ABORT_AT_PANIC -I/usr/local/openresty/pcre2/include -I/usr/local/openresty/openssl3/include' \
-    --with-ld-opt='-L/usr/local/openresty/pcre2/lib -L/usr/local/openresty/openssl3/lib -Wl,-rpath,/usr/local/openresty/pcre2/lib:/usr/local/openresty/openssl3/lib' \
-    "
+    --with-ld-opt='-L/usr/local/openresty/pcre2/lib -L/usr/local/openresty/openssl3/lib -Wl,-rpath,/usr/local/openresty/pcre2/lib:/usr/local/openresty/openssl3/lib'"
 
 ARG LUA_PROMETHEUS="0.20240525"
-ARG VTS_VERSION="0.2.2"
+ARG NGINX_VTS="0.2.4"
+ARG LUA_RESTY_MAXMINDDB="1.3.6"
+ARG LIBMAXMINDDB_VERSION="1.7.1"
 
+# Labels
 LABEL resty_image_base="${RESTY_IMAGE_BASE}"
 LABEL resty_image_tag="${RESTY_IMAGE_TAG}"
 LABEL resty_version="${RESTY_VERSION}"
 LABEL resty_luarocks_version="${RESTY_LUAROCKS_VERSION}"
 LABEL resty_openssl_version="${RESTY_OPENSSL_VERSION}"
-LABEL resty_openssl_patch_version="${RESTY_OPENSSL_PATCH_VERSION}"
-LABEL resty_openssl_url_base="${RESTY_OPENSSL_URL_BASE}"
-LABEL resty_openssl_build_options="${RESTY_OPENSSL_BUILD_OPTIONS}"
 LABEL resty_pcre_version="${RESTY_PCRE_VERSION}"
-LABEL resty_pcre_build_options="${RESTY_PCRE_BUILD_OPTIONS}"
-LABEL resty_pcre_sha256="${RESTY_PCRE_SHA256}"
-LABEL resty_config_options="${RESTY_CONFIG_OPTIONS}"
-LABEL resty_config_options_more="${RESTY_CONFIG_OPTIONS_MORE}"
-LABEL resty_config_deps="${_RESTY_CONFIG_DEPS}"
-LABEL resty_add_package_builddeps="${RESTY_ADD_PACKAGE_BUILDDEPS}"
-LABEL resty_add_package_rundeps="${RESTY_ADD_PACKAGE_RUNDEPS}"
-LABEL resty_eval_pre_configure="${RESTY_EVAL_PRE_CONFIGURE}"
-LABEL resty_eval_post_download_pre_configure="${RESTY_EVAL_POST_DOWNLOAD_PRE_CONFIGURE}"
-LABEL resty_eval_pre_make="${RESTY_EVAL_PRE_MAKE}"
-LABEL resty_eval_post_make="${RESTY_EVAL_POST_MAKE}"
-LABEL resty_luajit_options="${RESTY_LUAJIT_OPTIONS}"
-LABEL resty_pcre_options="${RESTY_PCRE_OPTIONS}"
-
 LABEL lua_prometheus="${LUA_PROMETHEUS}"
+LABEL nginx_vts="${NGINX_VTS}"
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
@@ -133,9 +108,12 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
         unzip \
         wget \
         zlib1g-dev \
+        git \
         ${RESTY_ADD_PACKAGE_BUILDDEPS} \
         ${RESTY_ADD_PACKAGE_RUNDEPS} \
-    && cd /tmp \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN cd /tmp \
     && if [ -n "${RESTY_EVAL_PRE_CONFIGURE}" ]; then eval $(echo ${RESTY_EVAL_PRE_CONFIGURE}); fi \
     && curl -fSL "${RESTY_OPENSSL_URL_BASE}/openssl-${RESTY_OPENSSL_VERSION}.tar.gz" -o openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
     && tar xzf openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
@@ -162,6 +140,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && make -j${RESTY_J} \
     && make -j${RESTY_J} install_sw \
     && cd /tmp \
+    && rm -rf openssl-${RESTY_OPENSSL_VERSION}.tar.gz openssl-${RESTY_OPENSSL_VERSION}
+
+RUN cd /tmp \
     && curl -fSL "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${RESTY_PCRE_VERSION}/pcre2-${RESTY_PCRE_VERSION}.tar.gz" -o pcre2-${RESTY_PCRE_VERSION}.tar.gz \
     && echo "${RESTY_PCRE_SHA256}  pcre2-${RESTY_PCRE_VERSION}.tar.gz" | shasum -a 256 --check \
     && tar xzf pcre2-${RESTY_PCRE_VERSION}.tar.gz \
@@ -173,6 +154,14 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && CFLAGS="-g -O3" make -j${RESTY_J} \
     && CFLAGS="-g -O3" make -j${RESTY_J} install \
     && cd /tmp \
+    && rm -rf pcre2-${RESTY_PCRE_VERSION}.tar.gz pcre2-${RESTY_PCRE_VERSION}
+
+RUN cd /tmp \
+    && git clone https://github.com/vozlt/nginx-module-vts.git \
+    && cd nginx-module-vts \
+    && git checkout v${NGINX_VTS}
+
+RUN cd /tmp \
     && curl -fSL https://openresty.org/download/openresty-${RESTY_VERSION}.tar.gz -o openresty-${RESTY_VERSION}.tar.gz \
     && tar xzf openresty-${RESTY_VERSION}.tar.gz \
     && cd /tmp/openresty-${RESTY_VERSION} \
@@ -182,15 +171,11 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && make -j${RESTY_J} \
     && make -j${RESTY_J} install \
     && cd /tmp \
-    && rm -rf \
-        openssl-${RESTY_OPENSSL_VERSION}.tar.gz openssl-${RESTY_OPENSSL_VERSION} \
-        pcre2-${RESTY_PCRE_VERSION}.tar.gz pcre2-${RESTY_PCRE_VERSION} \
-        openresty-${RESTY_VERSION}.tar.gz openresty-${RESTY_VERSION} \
+    && rm -rf openresty-${RESTY_VERSION}.tar.gz openresty-${RESTY_VERSION} nginx-module-vts
+
+RUN cd /tmp \
     && curl -fSL https://luarocks.github.io/luarocks/releases/luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz -o luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz \
     && tar xzf luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz \
-    && curl -fSL https://github.com/knyar/nginx-lua-prometheus/archive/refs/tags/${LUA_PROMETHEUS}.tar.gz -o lua-prometheus-${LUA_PROMETHEUS}.tar.gz \
-    && tar xzf lua-prometheus-${LUA_PROMETHEUS}.tar.gz \
-    && cp -r nginx-lua-prometheus-${LUA_PROMETHEUS_VERSION}/* /usr/local/openresty/lualib/prometheus/ \
     && cd luarocks-${RESTY_LUAROCKS_VERSION} \
     && ./configure \
         --prefix=/usr/local/openresty/luajit \
@@ -199,33 +184,43 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && make build \
     && make install \
     && cd /tmp \
-    && if [ -n "${RESTY_EVAL_POST_MAKE}" ]; then eval $(echo ${RESTY_EVAL_POST_MAKE}); fi \
-    && rm -rf luarocks-${RESTY_LUAROCKS_VERSION} luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz \
-    && rm -rf nginx-lua-prometheus-${LUA_PROMETHEUS_VERSION} \
-    && rm -rf lua-prometheus-${LUA_PROMETHEUS}.tar.gz \
+    && rm -rf luarocks-${RESTY_LUAROCKS_VERSION} luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz
+
+RUN cd /tmp \
+    && curl -fSL https://github.com/knyar/nginx-lua-prometheus/archive/refs/tags/${LUA_PROMETHEUS}.tar.gz -o lua-prometheus-${LUA_PROMETHEUS}.tar.gz \
+    && tar xzf lua-prometheus-${LUA_PROMETHEUS}.tar.gz \
+    && mkdir -p /usr/local/openresty/lualib/prometheus \
+    && cp -r nginx-lua-prometheus-${LUA_PROMETHEUS}/* /usr/local/openresty/lualib/prometheus \
+    && cd /tmp \
+    && rm -rf nginx-lua-prometheus-${LUA_PROMETHEUS} lua-prometheus-${LUA_PROMETHEUS}.tar.gz
+
+RUN cd /tmp \
+    && curl -fSL https://github.com/anjia0532/lua-resty-maxminddb/archive/refs/tags/v${LUA_RESTY_MAXMINDDB}.tar.gz -o lua-resty-maxminddb-${LUA_RESTY_MAXMINDDB}.tar.gz \
+    && tar xzf lua-resty-maxminddb-${LUA_RESTY_MAXMINDDB}.tar.gz \
+    && cd lua-resty-maxminddb-${LUA_RESTY_MAXMINDDB} \
+    && cp -r lib/resty/maxminddb.lua /usr/local/openresty/lualib/resty/ \
+    && cd /tmp \
+    && rm -rf lua-resty-maxminddb-${LUA_RESTY_MAXMINDDB} lua-resty-maxminddb-${LUA_RESTY_MAXMINDDB}.tar.gz
+
+RUN if [ -n "${RESTY_EVAL_POST_MAKE}" ]; then eval $(echo ${RESTY_EVAL_POST_MAKE}); fi \
     && if [ -n "${RESTY_ADD_PACKAGE_BUILDDEPS}" ]; then DEBIAN_FRONTEND=noninteractive apt-get remove -y --purge ${RESTY_ADD_PACKAGE_BUILDDEPS} ; fi \
     && DEBIAN_FRONTEND=noninteractive apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /var/run/openresty \
     && ln -sf /dev/stdout /usr/local/openresty/nginx/logs/access.log \
     && ln -sf /dev/stderr /usr/local/openresty/nginx/logs/error.log
 
-# Add additional binaries into PATH for convenience
+# Environment variables
 ENV PATH=$PATH:/usr/local/openresty/luajit/bin:/usr/local/openresty/nginx/sbin:/usr/local/openresty/bin
-
-# Add LuaRocks paths
-# If OpenResty changes, these may need updating:
-#    /usr/local/openresty/bin/resty -e 'print(package.path)'
-#    /usr/local/openresty/bin/resty -e 'print(package.cpath)'
 ENV LUA_PATH="/usr/local/openresty/site/lualib/?.ljbc;/usr/local/openresty/site/lualib/?/init.ljbc;/usr/local/openresty/lualib/?.ljbc;/usr/local/openresty/lualib/?/init.ljbc;/usr/local/openresty/site/lualib/?.lua;/usr/local/openresty/site/lualib/?/init.lua;/usr/local/openresty/lualib/?.lua;/usr/local/openresty/lualib/?/init.lua;./?.lua;/usr/local/openresty/luajit/share/luajit-2.1/?.lua;/usr/local/share/lua/5.1/?.lua;/usr/local/share/lua/5.1/?/init.lua;/usr/local/openresty/luajit/share/lua/5.1/?.lua;/usr/local/openresty/luajit/share/lua/5.1/?/init.lua"
-
 ENV LUA_CPATH="/usr/local/openresty/site/lualib/?.so;/usr/local/openresty/lualib/?.so;./?.so;/usr/local/lib/lua/5.1/?.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so;/usr/local/lib/lua/5.1/loadall.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so"
 
 # Copy nginx configuration files
 COPY nginx/nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
-COPY nginx/nginx.vh.default.conf /etc/nginx/conf.d/default.conf
+COPY nginx/conf.d/vts.conf /etc/nginx/conf.d/vts.conf
+COPY nginx/conf.d/geoip.conf /etc/nginx/conf.d/geoip.conf
+
+COPY libmaxminddb/*.mmdb /usr/local/share/GeoIP/
 
 CMD ["/usr/local/openresty/bin/openresty", "-g", "daemon off;"]
-
-# Use SIGQUIT instead of default SIGTERM to cleanly drain requests
-# See https://github.com/openresty/docker-openresty/blob/master/README.md#tips--pitfalls
 STOPSIGNAL SIGQUIT

@@ -2,8 +2,8 @@ version: '3.8'
 
 services:
   openresty:
-    build: .
-    container_name: lua-nginx-dev
+    image: nginx-core
+    container_name: nginx-core
     ports:
       - "8081:80"
       - "9145:9145"
