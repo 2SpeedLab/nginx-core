@@ -60,7 +60,7 @@ ARG RESTY_CONFIG_OPTIONS="\
     --with-stream_ssl_module \
     --with-stream_ssl_preread_module \
     --with-threads \
-    --add-module=/tmp/nginx-module-vts"
+    --add-module=/opt/nginx-module-vts"
 
 ARG RESTY_CONFIG_OPTIONS_MORE=""
 ARG RESTY_LUAJIT_OPTIONS="--with-luajit-xcflags='-DLUAJIT_NUMMODE=2 -DLUAJIT_ENABLE_LUA52COMPAT'"
@@ -156,7 +156,7 @@ RUN cd /tmp \
     && cd /tmp \
     && rm -rf pcre2-${RESTY_PCRE_VERSION}.tar.gz pcre2-${RESTY_PCRE_VERSION}
 
-RUN cd /tmp \
+RUN cd /opt \
     && git clone https://github.com/vozlt/nginx-module-vts.git \
     && cd nginx-module-vts \
     && git checkout v${NGINX_VTS}
@@ -169,9 +169,7 @@ RUN cd /tmp \
     && eval ./configure -j${RESTY_J} ${_RESTY_CONFIG_DEPS} ${RESTY_CONFIG_OPTIONS} ${RESTY_CONFIG_OPTIONS_MORE} ${RESTY_LUAJIT_OPTIONS} ${RESTY_PCRE_OPTIONS} \
     && if [ -n "${RESTY_EVAL_PRE_MAKE}" ]; then eval $(echo ${RESTY_EVAL_PRE_MAKE}); fi \
     && make -j${RESTY_J} \
-    && make -j${RESTY_J} install \
-    && cd /tmp \
-    && rm -rf openresty-${RESTY_VERSION}.tar.gz openresty-${RESTY_VERSION} nginx-module-vts
+    && make -j${RESTY_J} install
 
 RUN cd /tmp \
     && curl -fSL https://luarocks.github.io/luarocks/releases/luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz -o luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz \
